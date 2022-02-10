@@ -6,6 +6,9 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.content.Context;
 import android.app.Activity;
+import android.os.Bundle;
+import android.text.TextUtils;
+
 
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding;
 import io.flutter.embedding.engine.plugins.activity.ActivityAware;
@@ -25,11 +28,36 @@ public class ScaleFusionInfoPlugin implements FlutterPlugin, MethodCallHandler, 
   private Context context;
   private Activity activity;
 
+
+  public static final String REBOOT = "rebootDevice";
+  public static final String MDM_ACTIONS_BASE = "content://com.mdm.api";
+
   @Override
   public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
     channel = new MethodChannel(flutterPluginBinding.getBinaryMessenger(), "scale_fusion_info_plugin");
     channel.setMethodCallHandler(this);
     context = flutterPluginBinding.getApplicationContext();
+  }
+
+  public enum APIResult {
+    NOT_AUTHORIZED,
+    MDM_APP_NOT_INSTALLED,
+    DEVICE_CURRENTLY_UNMANAGED,
+    ACTION_NOT_SUPPORTED,
+    SUCCESS
+  }
+
+  public static class Response {
+    APIResult apiResult;
+    Cursor result;
+
+    public Cursor result() {
+      return this.result;
+    }
+
+    public APIResult apiResult() {
+      return this.apiResult;
+    }
   }
 
   @Override
@@ -99,6 +127,9 @@ public class ScaleFusionInfoPlugin implements FlutterPlugin, MethodCallHandler, 
       }
 
       result.success(buildSerial);
+    } else if(call.method.equals("reboot")) {
+      Response response = rebootDevice(context);
+      result.success(response.apiResult == APIResult.SUCCESS);
     } else {
       result.notImplemented();
     }
@@ -123,6 +154,37 @@ public class ScaleFusionInfoPlugin implements FlutterPlugin, MethodCallHandler, 
     if(cursor!=null){
       cursor.close();
     }
+  }
+
+  public static Response rebootDevice(@NonNull Context context) {
+    Response response = new Response();
+    try {
+      Bundle actionResult = context.getContentResolver().call(Uri.parse(MDM_ACTIONS_BASE), REBOOT, (String) null, (Bundle) null);
+      boolean z = actionResult.getBoolean("api_call_status");
+      String errorMessage = actionResult.getString("error_message");
+      if (actionResult.getBoolean("action_supported", true)) {
+        if (!TextUtils.isEmpty(errorMessage)) {
+          char c = 65535;
+          if (errorMessage.hashCode() == -2029100113) {
+            if (errorMessage.equals("Not allowed to access the API")) {
+              c = 0;
+            }
+          }
+          if (c == 0) {
+            response.apiResult = APIResult.NOT_AUTHORIZED;
+          } else {
+            response.apiResult = APIResult.DEVICE_CURRENTLY_UNMANAGED;
+          }
+        } else {
+          response.apiResult = APIResult.SUCCESS;
+        }
+      } else {
+        response.apiResult = APIResult.ACTION_NOT_SUPPORTED;
+      }
+    } catch (Exception e) {
+      response.apiResult = APIResult.MDM_APP_NOT_INSTALLED;
+    }
+    return response;
   }
 
   @Override
