@@ -19,5 +19,7 @@ class ScaleFusionInfoPlugin {
 
   static Future<String?> get buildSerial => _channel.invokeMethod('buildSerial');
 
-  static Future<bool?> get reboot => _channel.invokeMethod('reboot');
+  /// sends reboot request to scalefusion server
+  /// if the device cannot be rebooted throws [Exception]
+  static Future<void> get reboot => _channel.invokeMethod('reboot');
 }
