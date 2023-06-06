@@ -9,3 +9,5 @@ build/
 android/.idea/
 
 .idea/
+
+.fvm/
