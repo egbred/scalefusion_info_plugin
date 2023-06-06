@@ -18,4 +18,6 @@ class ScaleFusionInfoPlugin {
   static Future<String?> get gsmSerial => _channel.invokeMethod('gsmSerial');
 
   static Future<String?> get buildSerial => _channel.invokeMethod('buildSerial');
+
+  static Future<bool?> get reboot => _channel.invokeMethod('reboot');
 }

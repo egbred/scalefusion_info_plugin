@@ -5,3 +5,7 @@
 .pub/
 
 build/
+
+android/.idea/
+
+.idea/

@@ -16,8 +16,9 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  String _platformVersion = 'Unknown';
+  final String _platformVersion = 'Unknown';
   bool? isEnabled;
+
   @override
   void initState() {
     super.initState();
@@ -51,8 +52,18 @@ class _MyAppState extends State<MyApp> {
           title: const Text('Plugin example app'),
         ),
         body: Center(
-          child: Text('Running on: $_platformVersion\n'
-              'isScaleFusionEnabled: $isEnabled'),
+          child: Column(
+            children: [
+              Text('Running on: $_platformVersion\n'
+                  'isScaleFusionEnabled: $isEnabled'),
+              ElevatedButton(
+                onPressed: () async {
+                  await ScaleFusionInfoPlugin.reboot;
+                },
+                child: const Text("reboot device"),
+              )
+            ],
+          ),
         ),
       ),
     );
